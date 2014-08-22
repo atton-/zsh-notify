@@ -58,9 +58,9 @@ else
 fi
 
 if [ $TMUX ]; then
-  TMUX_ACTIVE_TTY=$(tmux list-windows -a -F '#{window_active} #{pane_tty}' | egrep '^1' | cut -f2 -d' ')
+  TTY_IS_ACTIVE_IN_TMUX=$(tmux list-windows -a -F '#{window_active} #{pane_tty}' | egrep "^1 $TTY")
 
-  if [ $TTY = $TMUX_ACTIVE_TTY ]; then
+  if [ TTY_IS_ACTIVE_IN_TMUX ]; then
       return 3
   fi
 fi
