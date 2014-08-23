@@ -12,8 +12,6 @@
 #
 # Exits with status 2 if the terminal is frontmost or the tab is active.
 #
-# Exits with status 3 if the pane is active in tmux.
-#
 # Requirements:
 #
 # - terminal-notifier.app
@@ -58,13 +56,19 @@ else
 fi
 
 if [ $TMUX ]; then
-  TTY_IS_ACTIVE_IN_TMUX=$(tmux list-windows -a -F '#{window_active} #{pane_tty}' | egrep "^1 $TTY")
+  TMUX_STATUS_IN_CURRENT_TTY=$(tmux list-windows -a -F '#{window_active} #{pane_tty} #{session_id}' | egrep "^1 $TTY")
 
-  if [ TTY_IS_ACTIVE_IN_TMUX ]; then
-      return 3
+  if [ $TMUX_STATUS_IN_CURRENT_TTY ]; then
+    TMUX_SESSION_ID=$(echo $TMUX_STATUS_IN_CURRENT_TTY | cut -f2 -d'$')
+    CLIENT_TTY=$(tmux list-clients -t ${TMUX_SESSION_ID} -F '#{client_tty}')
+    if [[ $term_id == 'com.googlecode.iterm2' ]]; then
+      TT='tell-iterm2'
+      if [[ `$TT <<< "frontmost and (tty of (current session of current terminal) is equal to \"$CLIENT_TTY\")"` == "true" ]]; then
+        return 2
+      fi
+  fi
   fi
 fi
-
 
 #cat /dev/stdin | growlnotify "$@"
 # growlnotify "$@" < /dev/stdin
